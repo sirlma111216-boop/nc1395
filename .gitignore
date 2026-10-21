@@ -4,3 +4,5 @@ _work/
 .DS_Store
 Thumbs.db
 *.log
+
+public/build-info.json

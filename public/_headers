@@ -78,3 +78,6 @@
 
 /
   Cache-Control: no-cache
+
+/build-info.json
+  Cache-Control: no-store
