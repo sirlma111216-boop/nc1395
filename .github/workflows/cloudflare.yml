@@ -1,0 +1,51 @@
+name: Deploy and verify Cloudflare
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: nc1395-production
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Start Cloudflare build for main
+        env:
+          DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+        run: |
+          node --input-type=module <<'NODE'
+          const hook = process.env.DEPLOY_HOOK;
+          if (!hook) throw new Error('CLOUDFLARE_DEPLOY_HOOK secret is missing');
+          const response = await fetch(hook, { method: 'POST' });
+          if (!response.ok) throw new Error(`Cloudflare rejected build trigger (${response.status})`);
+          const result = await response.json();
+          if (result.success === false) throw new Error('Cloudflare did not accept the build');
+          console.log('Cloudflare build requested for main.');
+          NODE
+      - name: Verify deployed commit on the public site
+        env:
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          const expected = process.env.EXPECTED_COMMIT;
+          for (let attempt = 0; attempt < 40; attempt++) {
+            try {
+              const response = await fetch(`https://jnc1395.labbitory.com/build-info.json?commit=${expected}`, {
+                headers: { 'Cache-Control': 'no-cache' }
+              });
+              if (response.ok) {
+                const info = await response.json();
+                if (info.commit === expected) {
+                  console.log(`Verified production commit ${expected}`);
+                  process.exit(0);
+                }
+              }
+            } catch { /* The previous deployment may not yet expose build metadata. */ }
+            console.log(`Waiting for production deployment (${attempt + 1}/40)...`);
+            await new Promise(resolve => setTimeout(resolve, 20000));
+          }
+          throw new Error(`Production did not reach commit ${expected}; inspect Cloudflare build logs.`);
+          NODE

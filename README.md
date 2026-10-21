@@ -420,3 +420,4 @@ npm run dev        # wrangler dev — 학급 기능까지 그대로 돌아간다
 - 배포 후 `https://jnc1395.labbitory.com/build-info.json`의 `commit`과 `git rev-parse HEAD`를 비교하여 실제 운영 버전을 확인합니다.
 - 이전 빌드의 Retry는 해당 과거 커밋을 다시 배포할 수 있습니다. 최신 변경을 반영하려면 최신 커밋의 빌드를 확인하세요.
 - `public/build-info.json`은 Wrangler 빌드 단계에서 자동 생성되며 Git에 커밋하지 않습니다.
+- 자동배포 검증 경로: GitHub Actions의 `Deploy and verify Cloudflare`가 main 푸시 시 전용 Deploy Hook을 호출하고, 운영 사이트의 커밋 일치까지 확인합니다. Hook은 `CLOUDFLARE_DEPLOY_HOOK` 저장소 비밀값에만 보관합니다.
