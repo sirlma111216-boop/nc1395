@@ -85,16 +85,16 @@
 
   /* 단계 표시줄 라벨 */
   var STEP_LABELS = [
-    { n: 1,  short: '시작',     long: '인트로',            period: 1 },
-    { n: 2,  short: '고천문학', long: '고천문학이란',      period: 1 },
-    { n: 3,  short: '지도',     long: '천상열차분야지도',  period: 1 },
-    { n: 4,  short: '확대',     long: '한 곳만 골라 확대', period: 1 },
-    { n: 5,  short: '비교',     long: '두 지도와 가설',    period: 1, last: true },
-    { n: 6,  short: '월하정인', long: '옛 그림 속 달',     period: 2, first: true },
-    { n: 7,  short: '등급',     long: '되짚기와 겉보기 등급', period: 2 },
-    { n: 8,  short: '측정',     long: '직접 재기',         period: 2 },
-    { n: 9,  short: '그래프',   long: '결과 확인',         period: 2 },
-    { n: 10, short: '결론',     long: '무엇을 알아냈나',   period: 2 }
+    { n: 1,  short: '시작',     long: '인트로' },
+    { n: 2,  short: '고천문학', long: '고천문학이란' },
+    { n: 6,  short: '월하정인', long: '옛 그림 속 달' },
+    { n: 3,  short: '지도',     long: '천상열차분야지도' },
+    { n: 4,  short: '확대',     long: '한 곳만 골라 확대' },
+    { n: 5,  short: '비교',     long: '두 지도와 가설' },
+    { n: 7,  short: '등급',     long: '겉보기 등급' },
+    { n: 8,  short: '측정',     long: '직접 재기' },
+    { n: 9,  short: '그래프',   long: '결과 확인' },
+    { n: 10, short: '결론',     long: '무엇을 알아냈나' }
   ];
 
   /* ---------- 편의 함수 ---------- */

@@ -190,16 +190,15 @@
    */
   Demo.onStage = function (step, sub) {
     if (!Demo.running) return;
-    var atHypo = (step === 5 && sub >= 3) || step >= 6;   // 가설은 5-3 화면부터
-    var atRank = (step === 5 && sub >= 5) || step >= 6;   // 순서 맞히기는 5-5 부터
-    var atSpot = step >= 6;                              // 월하정인은 6-1 부터
+    var atHypo = (step === 5 && sub >= 3) || step >= 7;   // 가설은 5-3 화면부터
+    var atRank = (step === 5 && sub >= 5) || step >= 7;   // 순서 맞히기는 5-5 부터
+    var atSpot = [1, 2].indexOf(step) < 0;                              // 월하정인은 6-1 부터
     if (atHypo && !Demo.done.vote) { Demo.done.vote = true; each(doVote, 900, 6000); }
     if (atHypo && !Demo.done.plan) { Demo.done.plan = true; each(doPlan, 2500, 11000); }
     if (atRank && !Demo.done.rank) { Demo.done.rank = true; each(doRank, 1200, 9000); }
     if (atSpot && !Demo.done.spot) { Demo.done.spot = true; each(doSpot, 1200, 8000); }
     if (step >= 8 && !Demo.done.result) { Demo.done.result = true; each(doResult, 1500, 12000); }
     if (step >= 10 && !Demo.done.note) { Demo.done.note = true; each(doNote, 1200, 9000); }
-    if (step >= 10 && !Demo.done.ladder) { Demo.done.ladder = true; each(doLadder, 500, 4000); }
   };
 
   /** 데모 시작. 이미 열린 수업이 있으면 그 수업에 붙는다. */

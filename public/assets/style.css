@@ -1935,3 +1935,14 @@ body.race-big{ overflow:hidden; }
 .th-joined, .td-joined{ text-align:center; white-space:nowrap; }
 .td-joined{ color:var(--ok); font-weight:700; }
 .td-joined.is-none{ color:var(--ink-dim); font-weight:400; }
+
+/* 지도 설명: 큰 이미지 다음에 설명을 한 줄 전체로 표시한다. */
+.step[data-step="3"] .split { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+.step[data-step="3"] .fig img { width: 100%; max-height: 70vh; object-fit: contain; }
+.step[data-step="3"] .split-right { font-size: clamp(1.1rem, 2vw, 1.5rem); line-height: 1.8; }
+.step[data-step="3"] .card { padding: clamp(1.25rem, 3vw, 2rem); }
+.step[data-step="3"] .card-title { font-size: clamp(1.3rem, 2.5vw, 1.8rem); }
+
+.step[data-step="3"] .np-han { font-size: 1.6rem; }
+.step[data-step="3"] .np-kor { font-size: 1.2rem; }
+.step[data-step="3"] .np-mean, .step[data-step="3"] .tiny { font-size: 1rem; }

@@ -10,6 +10,8 @@
   /* 단계별 소단계 수 */
   var SUBS = { 1: 2, 2: 3, 3: 6, 4: 1, 5: 7, 6: 2, 7: 8, 8: 2, 9: 3, 10: 1 };
   var LAST = 10;
+  var ORDER = STEP_LABELS.map(function (s) { return s.n; });
+  function firstSub(n) { return n === 7 ? 2 : 1; }
 
   /* 심화 화면 — [다음]/[이전] 으로는 건너뛰고, 교사가 눌러야 들어간다.
      성취기준 해설이 수식 도입을 배제하므로 포그슨 규칙을 여기로 돌렸다. */
@@ -44,18 +46,11 @@
     // 단계 표시줄
     var bar = $('stepbar');
     STEP_LABELS.forEach(function (s, i) {
-      // 차시가 시작되는 자리마다 이름표를 하나 세운다
-      if (i === 0 || s.first) {
-        var gap = el('span', 'sb-split' + (i === 0 ? ' is-first' : ''), bar);
-        gap.setAttribute('aria-hidden', 'true');
-        el('span', 'sb-split-txt', gap, s.period + '차시');
-      }
       var b = el('button', 'sb-item', bar);
       b.type = 'button';
       b.dataset.step = s.n;
-      b.dataset.period = s.period;
-      b.title = s.n + '. ' + s.long;
-      el('span', 'sb-num', b, String(s.n));
+      b.title = (i + 1) + '. ' + s.long;
+      el('span', 'sb-num', b, String(i + 1));
       el('span', 'sb-label', b, s.short);
       b.addEventListener('click', function () { Steps.go(s.n); });
     });
@@ -70,7 +65,6 @@
         if ((Steps.step === 5 && Steps.sub === 5) ||
             (Steps.step === 7 && Steps.sub === 8)) renderRankTally();
         if (Steps.step === 6 && Steps.sub === 1) renderSpotTally();
-        if (Steps.step === 7 && Steps.sub === 1) renderRecap();
         if (Steps.step === 8 && Steps.sub === 2) renderMeasureProgress();
         // 9-1 의 표에도 같은 "측정 학생수" 칸이 있다. 늦게 끝낸 학생이 올리면 여기도 차오른다.
         if (Steps.step === 9 && Steps.sub === 1) renderResultTable();
@@ -82,7 +76,6 @@
           }
         }
         if (Steps.step === 10 && !$('conclusionReveal').hidden) renderNotes();
-        if (Steps.step === 10 && global.Race) Race.render();
       };
     }
 
@@ -93,7 +86,7 @@
     var skips = document.querySelectorAll('[data-skip]');
     for (var i = 0; i < skips.length; i++) {
       skips[i].addEventListener('click', function () {
-        Steps.go(Math.min(LAST, Steps.step + 1));
+        Steps.go(ORDER[Math.min(ORDER.length - 1, ORDER.indexOf(Steps.step) + 1)]);
       });
     }
 
@@ -111,7 +104,7 @@
 
   Steps.go = function (n, sub, silent) {
     n = Math.max(1, Math.min(LAST, n));
-    sub = Math.max(1, Math.min(SUBS[n] || 1, sub || 1));
+    sub = Math.max(firstSub(n), Math.min(SUBS[n] || 1, sub || firstSub(n)));
     Steps.step = n;
     Steps.sub = sub;
 
@@ -132,7 +125,7 @@
     for (var j = 0; j < items.length; j++) {
       var k = Number(items[j].dataset.step);
       items[j].classList.toggle('is-now', k === n);
-      items[j].classList.toggle('is-done', k < n);
+      items[j].classList.toggle('is-done', ORDER.indexOf(k) < ORDER.indexOf(n));
       items[j].setAttribute('aria-current', k === n ? 'step' : 'false');
       // 표시줄이 가로로 넘칠 때 지금 단계가 보이도록 끌어온다
       if (k === n && items[j].scrollIntoView) {
@@ -144,9 +137,10 @@
     $('btnPrev').disabled = (n === 1 && sub === 1);
     var atEnd = (n === LAST && sub === (SUBS[n] || 1));
     $('btnNext').disabled = atEnd;
-    var label = STEP_LABELS[n - 1];
+    var position = ORDER.indexOf(n);
+    var label = STEP_LABELS[position];
     $('navWhere').textContent =
-      n + '/' + LAST + ' · ' + label.long + (SUBS[n] > 1 ? ' (' + sub + '/' + SUBS[n] + ')' : '');
+      (position + 1) + '/' + LAST + ' · ' + label.long + (SUBS[n] > 1 ? ' (' + (sub - firstSub(n) + 1) + '/' + (SUBS[n] - firstSub(n) + 1) + ')' : '');
 
 
     // 단계별 준비
@@ -175,7 +169,7 @@
     var n = Steps.step, sub = Steps.sub;
     do {
       if (sub < (SUBS[n] || 1)) sub++;
-      else if (n < LAST) { n++; sub = 1; }
+      else if (ORDER.indexOf(n) < ORDER.length - 1) { n = ORDER[ORDER.indexOf(n) + 1]; sub = firstSub(n); }
       else return;
     } while (isDeep(n, sub));      // 심화는 건너뛴다
     Steps.go(n, sub);
@@ -184,8 +178,8 @@
   Steps.prev = function () {
     var n = Steps.step, sub = Steps.sub;
     do {
-      if (sub > 1) sub--;
-      else if (n > 1) { n--; sub = SUBS[n] || 1; }
+      if (sub > firstSub(n)) sub--;
+      else if (ORDER.indexOf(n) > 0) { n = ORDER[ORDER.indexOf(n) - 1]; sub = SUBS[n] || 1; }
       else return;
     } while (isDeep(n, sub));
     Steps.go(n, sub);
@@ -391,7 +385,7 @@
     host.innerHTML = '';
     var label = State.predictionLabel();
     if (!label && !State.data.hypoWhy && !State.data.hypoHow) {
-      el('p', 'muted', host, '이번 시간에 가설을 내지 않았습니다. 단계 5로 돌아가면 낼 수 있습니다.');
+      el('p', 'muted', host, '이번 시간에 가설을 내지 않았습니다. 단계 6으로 돌아가면 낼 수 있습니다.');
       return;
     }
     var rows = [
@@ -539,72 +533,6 @@
       if (on && !mark) el('span', 'pb-mark', bs[i], '✓ 내가 고른 것');
       if (!on && mark) mark.remove();
     }
-  }
-
-  /** 2차시 첫 화면의 지난 시간 되짚기 */
-  function renderRecap() {
-    var t = $('recapTally');
-    if (!t) return;
-    t.innerHTML = '';
-    var counts = (global.Live && Live.tally && Live.tally.counts) || {};
-    var total = 0;
-    PREDICTIONS.forEach(function (p) { total += counts[p.key] || 0; });
-
-    // 새 코드로 2차시를 열면 반 전체 집계가 없다. 그때는 내가 고른 것만이라도 보여 준다.
-    var mineOnly = !total;
-    var cap = $('recapTallyCap');
-    if (mineOnly) {
-      counts = {};
-      if (State.data.prediction) counts[State.data.prediction] = 1;
-      if (cap) cap.textContent = State.data.prediction
-        ? '내가 고른 예상 — 반 전체는 지난 수업 코드로 열어야 나옵니다'
-        : '우리 반의 예상';
-      // 반 자료도 내 답도 없다 — 빈 막대만 남기지 말고 왜 비었는지 알려 준다
-      if (!State.data.prediction) {
-        el('p', 'muted tiny', t,
-          '1차시에 쓴 수업 코드로 다시 열면 그때의 예상이 그대로 나옵니다. ' +
-          '시작 화면에서 [지난 수업 코드로 이어서 열기]를 눌러 주세요.');
-        renderRecapPlans();
-        return;
-      }
-    } else if (cap) {
-      cap.textContent = '우리 반의 예상';
-    }
-    var max = 1;
-    PREDICTIONS.forEach(function (p) { max = Math.max(max, counts[p.key] || 0); });
-    PREDICTIONS.forEach(function (p) {
-      var row = el('div', 'tally-row', t);
-      el('span', 'tally-name', row, p.label);
-      var bar = el('div', 'tally-bar', row);
-      el('div', 'tally-fill', bar).style.width = ((counts[p.key] || 0) / max * 100) + '%';
-      if (State.data.prediction === p.key) row.classList.add('is-mine');
-      el('span', 'tally-num', row, mineOnly
-        ? (counts[p.key] ? '내 예상' : '')
-        : (counts[p.key] || 0) + '명');
-    });
-
-    renderRecapPlans();
-  }
-
-  /** 되짚기 화면 아래쪽 — 우리가 말한 확인 방법 */
-  function renderRecapPlans() {
-    var host = $('recapPlans');
-    host.innerHTML = '';
-    var plans = ((global.Live && Live.work && Live.work.plans) || [])
-      .filter(function (p) { return p.how; }).slice(0, 4);
-    var pcap = $('recapPlansCap');
-    if (!plans.length && State.data.hypoHow) {
-      plans = [{ nick: '나', how: State.data.hypoHow }];
-      if (pcap) pcap.textContent = '내가 적어 둔 확인 방법';
-    } else if (pcap) {
-      pcap.textContent = '우리가 말한 확인 방법';
-    }
-    if (!plans.length) { el('p', 'muted tiny', host, '지난 시간에 적어 둔 방법이 없습니다.'); return; }
-    plans.forEach(function (p) {
-      var row = el('div', 'plan-row', host);
-      el('span', 'plan-nick', row, p.nick || '익명');
-      el('span', 'plan-how', row, p.how);
-    });
   }
 
   /* ==========================================================================
@@ -1237,7 +1165,6 @@
 
   /* ---------- 단계 7. 겉보기 등급 ---------- */
   function build7(sub) {
-    if (sub === 1) renderRecap();
     if (sub === 8) {
       buildMagTable();                   // 내가 낸 순서를 표에 표시해야 하므로 다시 그린다
       renderRankTally();
@@ -1911,7 +1838,6 @@
 
   /* ---------- 단계 10. 결론 ---------- */
   function build10() {
-    if (global.Race) Race.build();
     if (!Steps.built[10]) {
       Steps.built[10] = true;
       var input = $('conclusionInput');
@@ -1936,7 +1862,6 @@
       $('btnReport').addEventListener('click', function () { Report.printReport(); });
     }
     if (!$('conclusionReveal').hidden) { renderLookback(); renderNotes(); }
-    if (global.Race) Race.render();
   }
 
   function revealLines() {
@@ -2036,9 +1961,9 @@
       // 잡았다면 여기가 빈다 — 왜 비었는지 알려 주고, 되돌아가라고 하지 않는다.
       // (이미 답을 본 뒤라 지금 고르는 것은 예상이 아니다)
       judge.textContent = Live.code
-        ? '지난 시간 기록이 이 기기에 없습니다. 다른 기기로 참여했다면 그럴 수 있습니다. ' +
+        ? '앞에서 작성한 기록이 이 기기에 없습니다. 다른 기기로 참여했다면 그럴 수 있습니다. ' +
           '우리 반이 함께 낸 것은 위 화면에서 그대로 볼 수 있습니다.'
-        : '지난 시간 기록이 이 기기에 없습니다. 단계 5로 돌아가면 예상을 고를 수 있습니다.';
+        : '앞에서 작성한 기록이 이 기기에 없습니다. 단계 5로 돌아가면 예상을 고를 수 있습니다.';
     } else if (State.data.prediction === 'bright') {
       judge.innerHTML = '✓ 예상이 <b>맞았습니다.</b> 자국의 크기는 별의 밝기와 이어져 있었습니다.';
     } else {
