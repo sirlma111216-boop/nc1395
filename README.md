@@ -411,3 +411,12 @@ npm run dev        # wrangler dev — 학급 기능까지 그대로 돌아간다
 - 겉보기 등급은 **근사값(≈)** 이며 베텔게우스는 변광성이라 대표값이다.
 - 이 지도는 600년 전 유물이라 현대 관측값과 오차가 있다. 그래도 등급과 자국 크기의
   관계는 뚜렷해서 수업에서 보여주려는 규칙은 충분히 드러난다.
+
+## GitHub 자동 배포
+
+- 운영 Worker: `nc1395`, 저장소: `sirlma111216-boop/nc1395`, 운영 브랜치: `main`.
+- Cloudflare Workers Builds에서 저장소 루트(`/`)를 사용하며 배포 명령은 `npx wrangler deploy`입니다.
+- `main`에 변경을 커밋하고 푸시하면 자동 빌드가 시작됩니다. 빌드가 성공하기 전에는 기존 배포가 유지됩니다.
+- 배포 후 `https://jnc1395.labbitory.com/build-info.json`의 `commit`과 `git rev-parse HEAD`를 비교하여 실제 운영 버전을 확인합니다.
+- 이전 빌드의 Retry는 해당 과거 커밋을 다시 배포할 수 있습니다. 최신 변경을 반영하려면 최신 커밋의 빌드를 확인하세요.
+- `public/build-info.json`은 Wrangler 빌드 단계에서 자동 생성되며 Git에 커밋하지 않습니다.
