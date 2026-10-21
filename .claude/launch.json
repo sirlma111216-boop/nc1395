@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "josunstellar",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "npx wrangler dev --port %PORT%"],
+      "port": 8123,
+      "autoPort": true
+    }
+  ]
+}
